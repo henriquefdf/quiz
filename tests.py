@@ -102,3 +102,32 @@ def test_create_question_with_edge_case_points():
         Question(title='Sample Question', points=0)
     with pytest.raises(Exception):
         Question(title='Sample Question', points=101)
+
+@pytest.fixture
+def sample_question():
+    question = Question(title='Sample Question', max_selections=3)
+    choice1 = question.add_choice('Choice A', is_correct=True)
+    choice2 = question.add_choice('Choice B', is_correct=False)
+    choice3 = question.add_choice('Choice C', is_correct=True)
+    return question
+
+@pytest.fixture
+def question_with_limited_selections():
+    question = Question(title='Limited Selections Question', max_selections=2)
+    question.add_choice('Choice A', is_correct=True)
+    question.add_choice('Choice B', is_correct=False)
+    question.add_choice('Choice C', is_correct=True)
+    return question
+
+def test_select_correct_choices(sample_question):
+    selected = sample_question.select_choices([c.id for c in sample_question.choices])
+    assert set(selected) == set(sample_question._correct_choice_ids())
+
+def test_remove_all_choices(sample_question):
+    sample_question.remove_all_choices()
+    assert len(sample_question.choices) == 0
+
+def test_max_selection_limit(question_with_limited_selections):
+    choices = [choice.id for choice in question_with_limited_selections.choices]
+    with pytest.raises(Exception, match="Cannot select more than 2 choices"):
+        question_with_limited_selections.select_choices(choices)
